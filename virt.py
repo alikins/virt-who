@@ -24,6 +24,21 @@ import event
 class VirtError(Exception):
     pass
 
+
+class GuestIdModel(dict):
+
+    @classmethod
+    def fromDomain(cls, domain):
+        guestUUID = domain.UUIDString()
+        attrs = {}
+        attrs['state'] = domain.state(0)[0]
+
+        guestId = cls()
+        guestId['guestId'] = guestUUID
+        guestId['attributes'] = attrs
+        return guestId
+
+
 class Virt:
     """ Class for interacting with libvirt. """
     def __init__(self, logger, registerEvents=True):
@@ -41,6 +56,7 @@ class Virt:
         except libvirt.libvirtError, e:
             raise VirtError(str(e))
 
+
     def listDomains(self):
         """ Get list of all domains. """
         domains = []
@@ -52,14 +68,18 @@ class Virt:
                 if domain.UUIDString() == "00000000-0000-0000-0000-000000000000":
                     # Don't send Domain-0 on xen (zeroed uuid)
                     continue
-                domains.append(domain)
-                self.logger.debug("Virtual machine found: %s: %s" % (domain.name(), domain.UUIDString()))
+                guest = GuestIdModel.fromDomain(domain)
+                domains.append(guest)
+                self.logger.debug("Virtual machine found: %s: %s %s" % (domain.name(), domain.UUIDString(), guest))
 
             # Non active domains
             for domainName in self.virt.listDefinedDomains():
                 domain = self.virt.lookupByName(domainName)
-                domains.append(domain)
-                self.logger.debug("Virtual machine found: %s: %s" % (domainName, domain.UUIDString()))
+
+                guest = GuestIdModel.fromDomain(domain)
+
+                domains.append(guest)
+                self.logger.debug("Virtual machine found: %s: %s %s" % (domainName, domain.UUIDString(), guest))
         except libvirt.libvirtError, e:
             raise VirtError(str(e))
         return domains

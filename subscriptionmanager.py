@@ -25,6 +25,8 @@ import rhsm.connection as rhsm_connection
 import rhsm.certificate as rhsm_certificate
 import rhsm.config as rhsm_config
 
+import libvirt
+
 class SubscriptionManagerError(Exception):
     def __init__(self, message):
         self.message = message
@@ -75,7 +77,7 @@ class SubscriptionManager:
         # Get comma separated list of UUIDs
         uuids = []
         for domain in domains:
-            uuids.append(domain.UUIDString())
+            uuids.append(domain)
         uuids.sort()
 
         self.logger.debug("Sending list of uuids: %s" % uuids)
