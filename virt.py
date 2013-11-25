@@ -25,13 +25,26 @@ class VirtError(Exception):
     pass
 
 
+class HypervisorInfoModel(dict):
+
+    @classmethod
+    def fromVirConnect(cls, virConnect):
+        virt_type = virConnect.getType()
+        #virt_caps = virConnect.getCapabilities()
+
+        host = cls()
+        host['hypervisorType'] = virt_type
+        #host['hypervisorCaps'] = virt_caps
+        return host
+
+
 class GuestIdModel(dict):
 
     @classmethod
     def fromDomain(cls, domain):
         guestUUID = domain.UUIDString()
         attrs = {}
-        attrs['state'] = domain.state(0)[0]
+        attrs['active'] = domain.isActive()
 
         guestId = cls()
         guestId['guestId'] = guestUUID
@@ -45,6 +58,7 @@ class Virt:
         self.changedCallback = None
         self.logger = logger
         self.virt = None
+
         # Log libvirt errors
         libvirt.registerErrorHandler(lambda ctx, error: None, None) #self.logger.exception(error), None)
         try:
@@ -61,6 +75,8 @@ class Virt:
         """ Get list of all domains. """
         domains = []
 
+        hypervisorInfo = HypervisorInfoModel.fromVirConnect(self.virt)
+
         try:
             # Active domains
             for domainID in self.virt.listDomainsID():
@@ -69,6 +85,8 @@ class Virt:
                     # Don't send Domain-0 on xen (zeroed uuid)
                     continue
                 guest = GuestIdModel.fromDomain(domain)
+                guest['attributes'].update(hypervisorInfo)
+
                 domains.append(guest)
                 self.logger.debug("Virtual machine found: %s: %s %s" % (domain.name(), domain.UUIDString(), guest))
 
@@ -77,6 +95,7 @@ class Virt:
                 domain = self.virt.lookupByName(domainName)
 
                 guest = GuestIdModel.fromDomain(domain)
+                guest['attributes'].update(hypervisorInfo)
 
                 domains.append(guest)
                 self.logger.debug("Virtual machine found: %s: %s %s" % (domainName, domain.UUIDString(), guest))
@@ -121,6 +140,7 @@ class Virt:
             return True
         except Exception:
             return False
+
 
 def eventToString(event):
     eventStrings = ( "Defined",
