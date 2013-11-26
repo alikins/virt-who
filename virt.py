@@ -47,9 +47,14 @@ class GuestIdModel(dict):
         attrs = {}
         attrs['active'] = domain.isActive()
 
+        # state() takes an unused flags arg, according to
+        # http://libvirt.org/html/libvirt-libvirt.html#virDomainGetState
+        domain_state = domain.state(0)[0]
+
         guestId = cls()
         guestId['guestId'] = guestUUID
         guestId['attributes'] = attrs
+        guestId['state'] = domain_state
         return guestId
 
 
