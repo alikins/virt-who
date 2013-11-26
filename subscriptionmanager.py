@@ -19,13 +19,11 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
 import os
-import sys
 
 import rhsm.connection as rhsm_connection
 import rhsm.certificate as rhsm_certificate
 import rhsm.config as rhsm_config
 
-import libvirt
 
 class SubscriptionManagerError(Exception):
     def __init__(self, message):

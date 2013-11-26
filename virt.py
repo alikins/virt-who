@@ -34,6 +34,7 @@ class HypervisorInfoModel(dict):
 
         host = cls()
         host['hypervisorType'] = virt_type
+        host['virtWhoType'] = "libvirt"
         #host['hypervisorCaps'] = virt_caps
         return host
 
@@ -53,6 +54,7 @@ class GuestIdModel(dict):
 
 
 class Virt:
+    virtWhoType = "libvirt"
     """ Class for interacting with libvirt. """
     def __init__(self, logger, registerEvents=True):
         self.changedCallback = None
